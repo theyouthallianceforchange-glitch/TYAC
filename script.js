@@ -22,12 +22,14 @@ document.addEventListener("DOMContentLoaded", () => {
     // 
     // SECTION REGISTRY — drives scroll-spy and the measuring rail
     // 
-    const SHEETS = [
-        { id: "home", sheet: "01", label: "HOME" },
-        { id: "about", sheet: "03", label: "ABOUT" },
-        { id: "blog", sheet: "04", label: "BLOG" },
-        { id: "contact", sheet: "05", label: "CONTACT" }
-    ];
+    // Pages may override the registry with body[data-sheets]="id:sheet:LABEL;…"
+    const SHEETS = (document.body.dataset.sheets ||
+        "home:01:HOME;about:03:ABOUT;blog:04:BLOG;contact:05:CONTACT")
+        .split(";")
+        .map(entry => {
+            const [id, sheet, label] = entry.split(":");
+            return { id, sheet, label };
+        });
 
     const sections = document.querySelectorAll("section");
     const navLinks = document.querySelectorAll(".nav-link");
@@ -141,7 +143,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         navLinks.forEach(link => {
-            const isActive = link.getAttribute("href") === `#${current}`;
+            const href = link.getAttribute("href") || "";
+            // Links to another page carry their own state (e.g. the Youth tab on youth.html)
+            if (!href.startsWith("#")) return;
+
+            const isActive = href === `#${current}`;
             link.classList.toggle("is-active", isActive);
             if (isActive) link.setAttribute("aria-current", "true");
             else link.removeAttribute("aria-current");
@@ -250,10 +256,52 @@ document.addEventListener("DOMContentLoaded", () => {
             // REMOVED e.preventDefault(); 
             // This allows the form data to successfully send to FormSubmit's server.
 
-            const name = document.getElementById("name").value.trim();
+            // Only the homepage contact form has a #name field; youth.html reuses
+            // .styled-form for the volunteer sign-up, which must not reach this alert.
+            const nameField = form.querySelector("#name");
 
             // Optional alert (might close quickly due to redirect)
-            alert(`Thank you, ${name}! Sending your message to The Youth Alliance Change...`);
+            if (nameField) {
+                alert(`Thank you, ${nameField.value.trim()}! Sending your message to The Youth Alliance Change...`);
+            }
+        });
+    }
+
+    // 
+    // VOLUNTEER SIGN-UP FORM — composes the message on the visitor's own device.
+    // This site has no backend, so nothing is submitted from here: we open the
+    // visitor's mail client with every field already written out.
+    // 
+    const signupForm = document.querySelector("#signup-form");
+
+    if (signupForm) {
+        const status = signupForm.querySelector(".form-status");
+
+        signupForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+
+            const data = new FormData(signupForm);
+            const value = (key) => (data.get(key) || "").toString().trim();
+
+            const subject = `Volunteer sign-up — ${value("name")}`;
+            const body = [
+                `Name: ${value("name")}`,
+                `Email: ${value("email")}`,
+                `Age range: ${value("age") || "Not given"}`,
+                `Community: ${value("community")}`,
+                `Role wanted: ${value("role") || "Any role"}`,
+                "",
+                "Story / message:",
+                value("story") || "(none given)"
+            ].join("\n");
+
+            if (status) {
+                status.textContent =
+                    "Opening your email app with these details — press send there to reach us.";
+            }
+
+            window.location.href =
+                `mailto:theyouthallianceforchange@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
         });
     }
 

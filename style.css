@@ -944,6 +944,7 @@ body.has-cursor input, body.has-cursor textarea { cursor: text; }
 .field-index { color: var(--oak); }
 
 .form-group input,
+.form-group select,
 .form-group textarea {
     width: 100%;
     padding: 0.9rem 1rem;
@@ -960,6 +961,7 @@ body.has-cursor input, body.has-cursor textarea { cursor: text; }
 .form-group textarea::placeholder { color: rgba(94, 98, 102, 0.55); }
 
 .form-group input:focus,
+.form-group select:focus,
 .form-group textarea:focus {
     outline: none;
     border-color: var(--oak);
@@ -967,6 +969,11 @@ body.has-cursor input, body.has-cursor textarea { cursor: text; }
 }
 
 .form-group textarea { resize: vertical; min-height: 140px; }
+
+.form-note { font-size: 0.72rem; line-height: 1.7; color: var(--steel); }
+.form-note strong { color: var(--graphite); font-weight: 500; }
+.form-note a { color: var(--oak); border-bottom: 1px solid var(--oak-soft); }
+.form-status { font-size: 0.78rem; line-height: 1.6; color: var(--oak); min-height: 1.2em; }
 
 .contact-sidebar { display: flex; flex-direction: column; gap: 1.25rem; }
 

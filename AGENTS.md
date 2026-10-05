@@ -2,6 +2,21 @@
 
 Static site: `index.html` + `style.css` + `script.js` + image assets at the repo root. No build step, no package manager, no backend.
 
+## The two pages
+
+- `index.html` — one-pager with anchor sections `#home`, `#about`, `#blog`, `#contact`.
+- `youth.html` — the youth & volunteer hub (own page, not an anchor): `#start` (intro), `#voices` (member stories), `#roles` (what volunteers do), `#signup` (volunteer sign-up). It reuses `style.css`/`script.js` and repeats the header/footer markup, which is the normal cost of a no-build static site — keep the header block in both files in sync.
+- Cross-page nav links are plain `href="youth.html"` / `href="index.html#about"`. `script.js` skips any `.nav-link` whose href is not a `#hash`, so the current-page state (`.is-active` + `aria-current="page"`) written into the youth page's nav survives the scroll-spy pass.
+- The measuring rail's sheet labels come from `body[data-sheets]="id:sheet:LABEL;…"` (see both pages); without it the registry falls back to the homepage sheets.
+
+## Forms
+
+There are two, and they behave differently:
+
+- **Homepage contact form** posts to `formsubmit.co` (external service, nothing in this repo handles it); `script.js` only fires an `alert()` if a `#name` field exists inside that specific form.
+- **Youth sign-up form** (`#signup-form`, also `.styled-form`) has no backend at all: `script.js` composes every field into a `mailto:` link to the TYAC inbox and opens the visitor's own mail client. The `.form-note` under the button says so plainly — do not imply the page submits anything by itself.
+- Because `.styled-form` is shared, **any handler keyed off that class must scope its field lookups to its own form** (this is exactly the bug that broke the first version of the youth page: the contact alert read `#name` and threw on the youth page).
+
 ## Running it here (Base44 dev environment)
 
 ```

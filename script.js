@@ -141,7 +141,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         navLinks.forEach(link => {
-            link.classList.toggle("is-active", link.getAttribute("href") === `#${current}`);
+            const isActive = link.getAttribute("href") === `#${current}`;
+            link.classList.toggle("is-active", isActive);
+            if (isActive) link.setAttribute("aria-current", "true");
+            else link.removeAttribute("aria-current");
         });
 
         // Measuring rail: progress + current sheet

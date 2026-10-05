@@ -78,6 +78,22 @@ a {
     outline-offset: 3px;
 }
 
+.skip-link {
+    position: absolute;
+    top: 0;
+    left: -9999px;
+    z-index: 9999;
+    padding: 0.9rem 1.3rem;
+    background: var(--graphite);
+    color: var(--linen);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.skip-link:focus { left: 0; }
+
 section { scroll-margin-top: 96px; }
 
 /* -------------------------------------------------------------- 3. TYPOGRAPHY */
@@ -216,6 +232,10 @@ p { color: var(--steel); }
     object-fit: cover;
     display: block;
 }
+
+/* The crest is shown whole rather than cropped into the plate */
+.plotter--contain .plotter__img,
+.plotter--contain .plotter__strip img { object-fit: contain; }
 
 .plotter.is-staged > .plotter__img { visibility: hidden; }
 
@@ -394,6 +414,7 @@ p { color: var(--steel); }
 
 body.has-cursor .cursor { display: block; }
 body.has-cursor, body.has-cursor a, body.has-cursor button { cursor: none; }
+body.has-cursor input, body.has-cursor textarea { cursor: text; }
 
 .cursor__ring {
     position: absolute;
@@ -965,11 +986,11 @@ body.has-cursor, body.has-cursor a, body.has-cursor button { cursor: none; }
     color: var(--oak);
 }
 
-.info-card h4 { margin-bottom: 0.6rem; }
+.info-card h3 { margin-bottom: 0.6rem; font-size: 1rem; }
 .info-card p { font-size: 0.85rem; line-height: 1.7; }
 
 .highlight-box { background: var(--graphite); border-color: var(--graphite); }
-.highlight-box h4 { color: var(--linen); }
+.highlight-box h3 { color: var(--linen); }
 .highlight-box p { color: rgba(242, 240, 237, 0.7); }
 .highlight-box .info-card__key { color: #C0A88A; }
 

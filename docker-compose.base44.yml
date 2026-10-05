@@ -1,0 +1,39 @@
+# Base44 development environment for the TYAC static site.
+# Runs the repo's own source through a live-reloading static dev server on port 3000.
+services:
+  web:
+    image: node:22-alpine
+    working_dir: /app
+    restart: on-failure
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./:/app
+      - web_cache:/root/.npm
+    environment:
+      - NODE_ENV=development
+    command:
+      - sh
+      - -ec
+      - |
+        exec npx --yes live-server@1.2.2 \
+          --host=0.0.0.0 \
+          --port=3000 \
+          --entry-file=index.html \
+          --watch=/app \
+          --ignore=/app/.git \
+          --no-browser \
+          /app
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/index.html').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 25s
+
+volumes:
+  web_cache:

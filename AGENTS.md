@@ -9,6 +9,12 @@ Static site: `index.html` + `style.css` + `script.js` + image assets at the repo
 - Cross-page nav links are plain `href="youth.html"` / `href="index.html#about"`. `script.js` skips any `.nav-link` whose href is not a `#hash`, so the current-page state (`.is-active` + `aria-current="page"`) written into the youth page's nav survives the scroll-spy pass.
 - The measuring rail's sheet labels come from `body[data-sheets]="id:sheet:LABEL;…"` (see both pages); without it the registry falls back to the homepage sheets.
 
+## Analytics
+
+- `analytics.js` is the only place the Google Analytics 4 Measurement ID lives; both pages load it from `<head>`. Paste the real `G-…` ID there to switch measurement on.
+- While the ID is still the `G-XXXXXXXXXX` placeholder the file deliberately loads nothing at all — no gtag request, no cookies, no third-party cost. Do not "fix" that guard, and do not hardcode an ID anywhere else.
+- Page views and acquisition source (referrer / search / campaign tag) come from GA4's own reports; nothing in this repo has to tag them.
+
 ## Forms
 
 There are two, and they behave differently:

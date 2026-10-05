@@ -10,6 +10,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+    const viewportHeight = () =>
+        window.innerHeight || document.documentElement.clientHeight;
+
+    // Is the element inside the viewport (with a tolerance so it triggers just before it lands)?
+    const isInView = (element, threshold) => {
+        const rect = element.getBoundingClientRect();
+        return rect.top < viewportHeight() * threshold && rect.bottom > 0;
+    };
+
     // 
     // SECTION REGISTRY — drives scroll-spy and the measuring rail
     // 
@@ -26,6 +35,93 @@ document.addEventListener("DOMContentLoaded", () => {
     const railStamp = document.querySelector(".rail__stamp");
     const railTrack = document.querySelector(".rail__track");
 
+    // 
+    // PLOTTER REVEAL — images print themselves in vertical strips
+    // 
+    const printPlotter = (plotter) => {
+        const strips = plotter.querySelectorAll(".plotter__strip");
+
+        strips.forEach((strip, i) => {
+            window.setTimeout(() => strip.classList.add("is-in"), i * 55);
+        });
+
+        // Hand back to the intact image once the strips have finished printing,
+        // so no strip seams remain in the resting state.
+        window.setTimeout(() => {
+            plotter.classList.add("is-revealed");
+        }, strips.length * 55 + 600);
+    };
+
+    const stagePlotter = (plotter) => {
+        const image = plotter.querySelector(".plotter__img");
+        if (!image || plotter.dataset.staged === "true") return;
+
+        const strips = 8;
+        const container = document.createElement("div");
+        container.className = "plotter__strips";
+        container.setAttribute("aria-hidden", "true");
+
+        for (let i = 0; i < strips; i++) {
+            const strip = document.createElement("div");
+            strip.className = "plotter__strip";
+            strip.style.left = `${(i * 100) / strips}%`;
+            strip.style.width = `${100 / strips}%`;
+
+            const slice = image.cloneNode(true);
+            slice.classList.remove("plotter__img");
+            slice.removeAttribute("alt");
+            slice.setAttribute("alt", "");
+            slice.style.width = `${strips * 100}%`;
+            slice.style.left = `${-i * 100}%`;
+
+            strip.appendChild(slice);
+            container.appendChild(strip);
+        }
+
+        plotter.appendChild(container);
+        plotter.classList.add("is-staged");
+        plotter.dataset.staged = "true";
+    };
+
+    document.querySelectorAll(".plotter").forEach(stagePlotter);
+
+    // 
+    // SCROLL REVEAL ANIMATION
+    // 
+    const revealElements = [
+        ...document.querySelectorAll(
+            ".pillar-card, .story-card, .leader-card, .blog-card, .info-card, .section-head"
+        )
+    ].filter(element => !element.classList.contains("reveal"));
+
+    if (!prefersReducedMotion) {
+        revealElements.forEach((element, i) => {
+            element.classList.add("reveal");
+            element.style.setProperty("--d", `${(i % 3) * 0.08}s`);
+        });
+    }
+
+    // 
+    // VIEWPORT PASS — plotters print and reveals fire as they come into view
+    // 
+    const updateViewport = () => {
+        document
+            .querySelectorAll('.plotter[data-staged="true"]:not([data-printed="true"])')
+            .forEach(plotter => {
+                if (!isInView(plotter, 0.95)) return;
+                plotter.dataset.printed = "true";
+                printPlotter(plotter);
+            });
+
+        revealElements.forEach(element => {
+            if (element.classList.contains("is-visible")) return;
+            if (isInView(element, 0.92)) element.classList.add("is-visible");
+        });
+    };
+
+    // 
+    // SCROLL FRAME — scroll-spy, measuring rail and viewport pass, throttled
+    // 
     let ticking = false;
 
     const onScrollFrame = () => {
@@ -59,14 +155,17 @@ document.addEventListener("DOMContentLoaded", () => {
             const active = SHEETS.find(s => s.id === current) || SHEETS[0];
             railStamp.textContent = `${active.sheet} / ${active.label}`;
         }
+
+        updateViewport();
     };
 
-    window.addEventListener("scroll", () => {
-        if (!ticking) {
-            ticking = true;
-            window.requestAnimationFrame(onScrollFrame);
-        }
-    });
+    const requestScrollFrame = () => {
+        if (ticking) return;
+        ticking = true;
+        window.requestAnimationFrame(onScrollFrame);
+    };
+
+    window.addEventListener("scroll", requestScrollFrame, { passive: true });
 
     // 
     // MEASURING RAIL — millimetre markings drawn to the height of the track
@@ -96,91 +195,6 @@ document.addEventListener("DOMContentLoaded", () => {
             railTrack.appendChild(tick);
         }
     };
-
-    // 
-    // PLOTTER REVEAL — images print themselves in vertical strips
-    // 
-    const plotterIO = "IntersectionObserver" in window
-        ? new IntersectionObserver((entries, observer) => {
-            entries.forEach(entry => {
-                if (!entry.isIntersecting) return;
-                const strips = entry.target.querySelectorAll(".plotter__strip");
-                strips.forEach((strip, i) => {
-                    window.setTimeout(() => strip.classList.add("is-in"), i * 55);
-                });
-                observer.unobserve(entry.target);
-            });
-        }, { threshold: 0.2 })
-        : null;
-
-    const stagePlotter = (plotter) => {
-        const image = plotter.querySelector(".plotter__img");
-        if (!image || plotter.dataset.staged === "true") return;
-
-        const strips = 8;
-        const container = document.createElement("div");
-        container.className = "plotter__strips";
-        container.setAttribute("aria-hidden", "true");
-
-        for (let i = 0; i < strips; i++) {
-            const strip = document.createElement("div");
-            strip.className = "plotter__strip";
-            strip.style.left = `${(i * 100) / strips}%`;
-            strip.style.width = `${100 / strips}%`;
-
-            const slice = image.cloneNode(true);
-            slice.classList.remove("plotter__img");
-            slice.removeAttribute("alt");
-            slice.setAttribute("alt", "");
-            slice.style.width = `${strips * 100}%`;
-            slice.style.left = `${-i * 100}%`;
-
-            strip.appendChild(slice);
-            container.appendChild(strip);
-        }
-
-        plotter.appendChild(container);
-        plotter.classList.add("is-staged");
-        plotter.dataset.staged = "true";
-
-        if (plotterIO && !prefersReducedMotion) {
-            plotterIO.observe(plotter);
-        } else {
-            plotter.querySelectorAll(".plotter__strip").forEach(s => s.classList.add("is-in"));
-        }
-    };
-
-    const initPlotters = () => {
-        document.querySelectorAll(".plotter").forEach(stagePlotter);
-    };
-
-    initPlotters();
-
-    // 
-    // SCROLL REVEAL ANIMATION
-    // 
-    const revealElements = document.querySelectorAll(
-        ".pillar-card, .story-card, .leader-card, .blog-card, .info-card, .section-head"
-    );
-
-    revealElements.forEach(element => {
-        element.classList.add("reveal");
-    });
-
-    if ("IntersectionObserver" in window && !prefersReducedMotion) {
-        const revealIO = new IntersectionObserver((entries, observer) => {
-            entries.forEach((entry, i) => {
-                if (!entry.isIntersecting) return;
-                entry.target.style.setProperty("--d", `${(i % 3) * 0.08}s`);
-                entry.target.classList.add("is-visible");
-                observer.unobserve(entry.target);
-            });
-        }, { rootMargin: "0px 0px -12% 0px", threshold: 0.08 });
-
-        revealElements.forEach(element => revealIO.observe(element));
-    } else {
-        revealElements.forEach(element => element.classList.add("is-visible"));
-    }
 
     // 
     // CAD CROSSHAIR CURSOR (fine pointers only)
@@ -280,18 +294,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // 
-    // RAIL GEOMETRY — measured after layout, redrawn on resize
+    // FIRST PASS — after fonts and images settle, then on resize
     // 
-    drawRailTicks();
-    onScrollFrame();
+    const firstPass = () => {
+        drawRailTicks();
+        onScrollFrame();
+    };
+
+    firstPass();
+    window.addEventListener("load", firstPass);
 
     let resizeTimer = null;
     window.addEventListener("resize", () => {
         window.clearTimeout(resizeTimer);
-        resizeTimer = window.setTimeout(() => {
-            drawRailTicks();
-            onScrollFrame();
-        }, 180);
+        resizeTimer = window.setTimeout(firstPass, 180);
     });
 
 });

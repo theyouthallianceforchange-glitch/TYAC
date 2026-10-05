@@ -219,6 +219,10 @@ p { color: var(--steel); }
 
 .plotter.is-staged > .plotter__img { visibility: hidden; }
 
+/* Once printed, hand back to the intact image so no strip seams remain */
+.plotter.is-revealed > .plotter__img { visibility: visible; }
+.plotter.is-revealed .plotter__strips { display: none; }
+
 .plotter__strips { position: absolute; inset: 0; }
 
 .plotter__strip {

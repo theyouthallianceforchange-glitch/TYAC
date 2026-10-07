@@ -1,0 +1,24 @@
+# Base44 sandbox/dev environment for the TYAC static website.
+# Serves the cloned source (bind-mounted) through a live-reloading static server
+# on host port 3000. Not used for production deployment.
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.base44
+    working_dir: /app
+    command: ["sh", "-ec", "exec live-server --port=3000 --host=0.0.0.0 --no-browser --wait=150"]
+    volumes:
+      - .:/app
+    ports:
+      - "3000:3000"
+    environment:
+      - BASE44_PREVIEW_MODE
+      - CHOKIDAR_USEPOLLING=true
+    restart: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/ >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s

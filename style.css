@@ -51,6 +51,26 @@ ul {
     list-style: none;
 }
 
+/* Clickable organization email links */
+.email-link {
+    color: var(--accent-color);
+    font-weight: 500;
+    word-break: break-word;
+}
+
+.email-link:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+.main-footer .email-link {
+    color: #ffffff;
+}
+
+.main-footer .email-link:hover {
+    color: var(--accent-color);
+}
+
 /* REUSABLE COMPONENTS & UTILITIES */
 .page-section {
     padding: 5rem 0;

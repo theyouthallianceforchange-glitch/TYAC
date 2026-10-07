@@ -1,0 +1,9 @@
+# Dev-only tooling image for the Base44 sandbox.
+# Installs a live-reloading static file server; the site source itself is
+# bind-mounted at runtime (see docker-compose.base44.yml), never baked in.
+FROM node:22-alpine
+
+RUN npm install -g live-server@1.2.2
+
+WORKDIR /app
+EXPOSE 3000
